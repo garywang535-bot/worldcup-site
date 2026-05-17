@@ -52,8 +52,8 @@ jobs:
 
       - name: Upload matches.json to R2
         run: |
-          aws s3 cp public/matches.json "s3://${R2_BUCKET_NAME}/matches.json" \
-            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+          aws s3 cp public/matches.json "s3://${{ secrets.R2_BUCKET_NAME }}/matches.json" \
+            --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
             --content-type "application/json; charset=utf-8" \
             --cache-control "public, max-age=180"
         env:
