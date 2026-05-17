@@ -34,7 +34,7 @@ jobs:
       - name: Generate matches.json
         run: npm run sync:matches:once
         env:
-          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+          FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
           FOOTBALL_DATA_COMPETITION_CODE: ${{ vars.FOOTBALL_DATA_COMPETITION_CODE || 'WC' }}
           MATCHES_OUTPUT_PATH: public/matches.json
 
