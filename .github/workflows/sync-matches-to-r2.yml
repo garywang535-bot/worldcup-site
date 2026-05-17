@@ -43,12 +43,6 @@ jobs:
           test -s public/matches.json
           node -e "const fs=require('fs'); const data=JSON.parse(fs.readFileSync('public/matches.json','utf8')); if(!Array.isArray(data) || data.length===0) throw new Error('matches.json must be a non-empty array'); console.log('matches:', data.length)"
 
-      - name: Configure R2 credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          aws-region: auto
 
       - name: Upload matches.json to R2
         run: |
@@ -57,5 +51,11 @@ jobs:
             --content-type "application/json; charset=utf-8" \
             --cache-control "public, max-age=180"
         env:
+      
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_REGION: auto
+      
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        
