@@ -96,9 +96,9 @@ function mapMatch(match) {
 }
 
 async function fetchFootballDataMatches() {
-  const token = process.env.FOOTBALL_DATA_TOKEN?.trim();
+  const token = process.env.FOOTBALL_DATA_KEY?.trim();
   if (!token) {
-    throw new Error("缺少 FOOTBALL_DATA_TOKEN，请在 .env.local 中配置 football-data.org Token");
+    throw new Error("缺少 FOOTBALL_DATA_KEY，请在 .env.local 中配置 football-data.org Token");
   }
 
   const competition = process.env.FOOTBALL_DATA_COMPETITION_CODE?.trim() || DEFAULT_COMPETITION;
