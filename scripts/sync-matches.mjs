@@ -7,6 +7,8 @@ const DEFAULT_COMPETITION = "WC";
 const DEFAULT_INTERVAL_SECONDS = 180;
 const DEFAULT_OUTPUT = "public/matches.json";
 
+
+
 async function loadEnvFile(file) {
   try {
     const text = await readFile(file, "utf8");
