@@ -43,7 +43,7 @@ function cacheIdentityKey(): string {
     process.env.MATCHES_FEED_URL ?? "",
     process.env.MATCHES_JSON_URL ?? "",
     process.env.MATCHES_FEED_AUTHORIZATION ?? "",
-    process.env.FOOTBALL_DATA_TOKEN ?? "",
+    process.env.FOOTBALL_DATA_KEY ?? "",
     process.env.FOOTBALL_DATA_COMPETITION_CODE ?? "",
   ].join("\t");
 }
@@ -70,7 +70,7 @@ async function tryRemoteMatchesJson(url: string): Promise<MatchRecord[] | null> 
     console.log("[调试] 正在请求 R2 地址:", url);
     const res = await fetch(url, {
       signal: ac.signal,
-      cache: "force-cache",
+      cache: "no-store",
       headers,
     });
     if (!res.ok) {
@@ -108,7 +108,7 @@ async function fetchRemoteMatchesOnce(): Promise<{ matches: MatchRecord[]; fromR
     if (remote?.length) return { matches: cloneRecords(remote), fromRemote: true };
   }
 
-  const token = process.env.FOOTBALL_DATA_TOKEN?.trim();
+  const token = process.env.FOOTBALL_DATA_KEY?.trim();
   const competition = process.env.FOOTBALL_DATA_COMPETITION_CODE?.trim() ?? "WC";
   if (token) {
     const live = await fetchMatchesFromFootballData(token, competition);
@@ -125,7 +125,7 @@ async function fetchRemoteMatchesOnce(): Promise<{ matches: MatchRecord[]; fromR
  * 统一赛程数据源（配置尽量简单）：
  * 1. MATCH_DATA_SOURCE=mock → 始终本地演示数据（不缓存）
  * 2. MATCHES_FEED_URL（或兼容 MATCHES_JSON_URL）→ GET MatchRecord[] JSON
- * 3. FOOTBALL_DATA_TOKEN → football-data.org
+ * 3. FOOTBALL_DATA_KEY → football-data.org
  * 4. 以上都不可用 → 本地 mock
  *
  * 外网成功结果在进程内缓存 MATCHES_CACHE_TTL_SECONDS（默认 180），减少重复请求。
