@@ -27,6 +27,7 @@ function isMatchRecord(x: unknown): x is MatchRecord {
 /** 统一读取「赛程 JSON 地址」：新变量优先，兼容旧名 MATCHES_JSON_URL */
 function resolveFeedUrl(): string | undefined {
   const primary = process.env.MATCHES_FEED_URL?.trim();
+  console.log("[调试] resolveFeedUrl: 读到的 MATCHES_FEED_URL =", primary);
   if (primary) return primary;
   return process.env.MATCHES_JSON_URL?.trim() || undefined;
 }
@@ -66,6 +67,7 @@ async function tryRemoteMatchesJson(url: string): Promise<MatchRecord[] | null> 
   const headers: Record<string, string> = { Accept: "application/json" };
   if (auth) headers.Authorization = auth;
   try {
+    console.log("[调试] 正在请求 R2 地址:", url);
     const res = await fetch(url, {
       signal: ac.signal,
       cache: "no-store",
@@ -81,6 +83,7 @@ async function tryRemoteMatchesJson(url: string): Promise<MatchRecord[] | null> 
       return null;
     }
     const parsed = data.filter(isMatchRecord);
+    console.log("[调试] 解析成功，有效比赛数量:", parsed.length);
     if (!parsed.length) {
       console.warn("[matchesSource] feed 中无合法 MatchRecord，请对照 lib/types.ts");
       return null;
@@ -100,6 +103,7 @@ async function tryRemoteMatchesJson(url: string): Promise<MatchRecord[] | null> 
 async function fetchRemoteMatchesOnce(): Promise<{ matches: MatchRecord[]; fromRemote: boolean }> {
   const feedUrl = resolveFeedUrl();
   if (feedUrl) {
+    console.log("[调试] fetchRemoteMatchesOnce: feedUrl =", feedUrl);
     const remote = await tryRemoteMatchesJson(feedUrl);
     if (remote?.length) return { matches: cloneRecords(remote), fromRemote: true };
   }
