@@ -5,7 +5,10 @@ import { fetchMatchesFromFootballData } from "@/lib/live/footballData";
 const MOCK: MatchRecord[] = MATCHES;
 
 /** 默认 3 分钟：与比分页轮询间隔一致，减轻外网与自建 BFF 压力 */
-const DEFAULT_CACHE_TTL_MS = 3 * 60 * 1000;
+const DEFAULT_CACHE_TTL_SECONDS = 180;
+
+/** 页面 ISR revalidate（秒），与 R2 fetch 及内存缓存默认对齐 */
+export const MATCHES_PAGE_REVALIDATE = DEFAULT_CACHE_TTL_SECONDS;
 
 function isMatchRecord(x: unknown): x is MatchRecord {
   if (!x || typeof x !== "object") return false;
@@ -27,7 +30,6 @@ function isMatchRecord(x: unknown): x is MatchRecord {
 /** 统一读取「赛程 JSON 地址」：新变量优先，兼容旧名 MATCHES_JSON_URL */
 function resolveFeedUrl(): string | undefined {
   const primary = process.env.MATCHES_FEED_URL?.trim();
-  console.log("[调试] resolveFeedUrl: 读到的 MATCHES_FEED_URL =", primary);
   if (primary) return primary;
   return process.env.MATCHES_JSON_URL?.trim() || undefined;
 }
@@ -49,11 +51,15 @@ function cacheIdentityKey(): string {
 }
 
 /** 缓存时长（秒），未设置或非法时使用默认 180 秒 */
-function cacheTtlMs(): number {
+function cacheTtlSeconds(): number {
   const raw = process.env.MATCHES_CACHE_TTL_SECONDS?.trim();
   const n = raw ? Number(raw) : NaN;
-  if (Number.isFinite(n) && n > 0) return Math.floor(n * 1000);
-  return DEFAULT_CACHE_TTL_MS;
+  if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  return DEFAULT_CACHE_TTL_SECONDS;
+}
+
+function cacheTtlMs(): number {
+  return cacheTtlSeconds() * 1000;
 }
 
 type MemoryCache = { key: string; expires: number; matches: MatchRecord[] };
@@ -67,10 +73,9 @@ async function tryRemoteMatchesJson(url: string): Promise<MatchRecord[] | null> 
   const headers: Record<string, string> = { Accept: "application/json" };
   if (auth) headers.Authorization = auth;
   try {
-    console.log("[调试] 正在请求 R2 地址:", url);
     const res = await fetch(url, {
       signal: ac.signal,
-      cache: "no-store",
+      next: { revalidate: cacheTtlSeconds() },
       headers,
     });
     if (!res.ok) {
@@ -83,7 +88,6 @@ async function tryRemoteMatchesJson(url: string): Promise<MatchRecord[] | null> 
       return null;
     }
     const parsed = data.filter(isMatchRecord);
-    console.log("[调试] 解析成功，有效比赛数量:", parsed.length);
     if (!parsed.length) {
       console.warn("[matchesSource] feed 中无合法 MatchRecord，请对照 lib/types.ts");
       return null;
@@ -103,7 +107,6 @@ async function tryRemoteMatchesJson(url: string): Promise<MatchRecord[] | null> 
 async function fetchRemoteMatchesOnce(): Promise<{ matches: MatchRecord[]; fromRemote: boolean }> {
   const feedUrl = resolveFeedUrl();
   if (feedUrl) {
-    console.log("[调试] fetchRemoteMatchesOnce: feedUrl =", feedUrl);
     const remote = await tryRemoteMatchesJson(feedUrl);
     if (remote?.length) return { matches: cloneRecords(remote), fromRemote: true };
   }
