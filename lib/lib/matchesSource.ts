@@ -5,7 +5,10 @@ import { fetchMatchesFromFootballData } from "@/lib/live/footballData";
 const MOCK: MatchRecord[] = MATCHES;
 
 /** 默认 3 分钟：与比分页轮询间隔一致，减轻外网与自建 BFF 压力 */
-const DEFAULT_CACHE_TTL_MS = 3 * 60 * 1000;
+const DEFAULT_CACHE_TTL_SECONDS = 180;
+
+/** 页面 ISR revalidate（秒），与 R2 fetch 及内存缓存默认对齐 */
+export const MATCHES_PAGE_REVALIDATE = DEFAULT_CACHE_TTL_SECONDS;
 
 function isMatchRecord(x: unknown): x is MatchRecord {
   if (!x || typeof x !== "object") return false;
@@ -48,11 +51,15 @@ function cacheIdentityKey(): string {
 }
 
 /** 缓存时长（秒），未设置或非法时使用默认 180 秒 */
-function cacheTtlMs(): number {
+function cacheTtlSeconds(): number {
   const raw = process.env.MATCHES_CACHE_TTL_SECONDS?.trim();
   const n = raw ? Number(raw) : NaN;
-  if (Number.isFinite(n) && n > 0) return Math.floor(n * 1000);
-  return DEFAULT_CACHE_TTL_MS;
+  if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  return DEFAULT_CACHE_TTL_SECONDS;
+}
+
+function cacheTtlMs(): number {
+  return cacheTtlSeconds() * 1000;
 }
 
 type MemoryCache = { key: string; expires: number; matches: MatchRecord[] };
@@ -68,7 +75,7 @@ async function tryRemoteMatchesJson(url: string): Promise<MatchRecord[] | null> 
   try {
     const res = await fetch(url, {
       signal: ac.signal,
-      cache: "no-store",
+      next: { revalidate: cacheTtlSeconds() },
       headers,
     });
     if (!res.ok) {
