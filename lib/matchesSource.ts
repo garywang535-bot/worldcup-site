@@ -70,7 +70,7 @@ async function tryRemoteMatchesJson(url: string): Promise<MatchRecord[] | null> 
     console.log("[调试] 正在请求 R2 地址:", url);
     const res = await fetch(url, {
       signal: ac.signal,
-      cache: "no-store",
+      cache: "force-cache",
       headers,
     });
     if (!res.ok) {
