@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # GitHub Actions 定时任务通常不保证 3 分钟精确执行，5 分钟是更稳妥的起步值。
-    - cron: "*/5 * * * *"
+    - cron: "*/3 * * * *"
 concurrency:
   group: sync-matches-to-r2
   cancel-in-progress: false
