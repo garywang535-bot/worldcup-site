@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
+import { isAffiliateEnabled } from "@/lib/affiliate";
 
 export function Footer() {
   return (
@@ -26,8 +28,14 @@ export function Footer() {
           <Link className="hover:text-brand-accent" href="/subscribe">
             Subscribe
           </Link>
+          {isAffiliateEnabled() ? (
+            <Link className="hover:text-brand-accent" href="/gear">
+              Gear
+            </Link>
+          ) : null}
         </div>
       </div>
+      <AffiliateDisclosure className="mx-auto mt-6 max-w-6xl px-4" />
       <p className="mx-auto mt-8 max-w-6xl px-4 text-xs text-slate-500">
         © {new Date().getFullYear()} World Cup Info Hub. All rights reserved.
       </p>
